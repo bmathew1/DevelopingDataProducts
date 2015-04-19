@@ -1,0 +1,170 @@
+---
+title       : Loan Repayment App
+subtitle    : Course Project - Developing Data Products
+author      : 
+job         : 
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme: solarized_light
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---   
+
+## Planning to buy something expensive?
+
+- Thinking of buying something expensive like a car or a house?  
+- But do not have enough money to pay upfront  
+- You probably will look at getting a loan  
+- [Loan Repayment Application](https://bmat.shinyapps.io/LoanRepayment/) provides a simple way to find some of the information that you need to make you decision 
+
+--- .class #id 
+
+## A simple and easy way to work out details of the loan
+
+- [Loan Repayment Application](https://bmat.shinyapps.io/LoanRepayment/) is a very simple tool to work out the details of loan that you might want to borow  
+- It allows you to play around with the key variables in borrowing
+- And provide you the information on the contribution of you payment towards interest and the loan principal amount
+- <span class = 'red'>Note: </span> Do consult your lender of other options they may have before finalising you decision
+
+
+--- &twocol w1:50% w2:50%
+
+## Check out the charts ...  
+
+- Charts showing proportion towards interest and principal for 30 and 20 year loans
+- The area in red shows the proportion that you pay towards interest; Longer the loan term, higher the proportion that goes to interest.
+
+*** =left
+
+```{r echo=FALSE, eval=TRUE, fig.width=6, fig.height=6}
+pv<-150000
+rate<-8/1200
+years<-30
+per <- years * 12
+pmt <- (rate + (rate / (((1+rate)^per) - 1) )) * pv
+bdw <- data.frame(year=numeric(per), period=numeric(per), 
+                  repayment=numeric(per), 
+                  toPrincipal=numeric(per), 
+                  percentToPrincipal=numeric(per),
+                  remainingPrincipal=numeric(per))
+bdw$repayment <- pmt
+remPrincipal <- pv
+for(i in 1:per) {
+    bdw$year[i] <- format(ceiling(i/12),nsmall=0)
+    bdw$period[i] <- format(i, nsmall=0)
+    bdw$toPrincipal[i] <- P <- pmt-(remPrincipal * rate)
+    bdw$percentToPrincipal[i] <- (P / pmt) * 100
+    remPrincipal <- remPrincipal - P
+    bdw$remainingPrincipal[i] <- remPrincipal
+    }
+#adjustment for last payment
+bdw$repayment[per]<-pmt+bdw$remainingPrincipal[per]
+bdw$remainingPrincipal[i] <- 0
+
+totalInterest <- sum(bdw$repayment) - sum(bdw$toPrincipal)
+totalPayment <- sum(bdw$repayment)
+totalToPrincipal <- sum(bdw$toPrincipal)
+
+with(bdw, plot(period, toPrincipal, type="n", 
+               ylab="Contribution of repayment ($ or currency entered)",
+               xlab="Period (months)",
+               main="Repayment contribution to principal and interest",
+               ylim=c(0, repayment[1])))
+
+polygon(c(1, bdw$period, dim(bdw)[1]), c(0, bdw$toPrincipal, 0),
+        col="skyblue")
+polygon(c(bdw$period[1], bdw$period, bdw$period[length(bdw$period)]), 
+        c(min(bdw$repayment), bdw$toPrincipal, min(bdw$repayment)),
+        col="red")
+legend("bottomright", pch=15, col = c("red", "skyblue"), 
+       legend = c("Pay towards interest", "Pay towards principal"))
+
+text((0.194)*as.numeric(bdw$period[length(bdw$period)]), (0.955)*bdw$repayment, 
+     paste0("Interest - $", format((totalInterest), nsmall=0)))
+
+text((0.861)*as.numeric(bdw$period[length(bdw$period)]), 
+     (0.177)*bdw$repayment, paste0("Principal - $", 
+                                  format(totalToPrincipal, nsmall=0)))
+
+text( (0.5)*as.numeric(bdw$period[length(bdw$period)]), 
+      (0.5)*bdw$repayment, paste0("Total payment - $", format(totalPayment, nsmall=0)))
+
+```
+
+
+*** =right
+
+```{r echo=FALSE, eval=TRUE, fig.width=6, fig.height=6}
+pv<-150000
+rate<-8/1200
+years<-20
+per <- years * 12
+pmt <- (rate + (rate / (((1+rate)^per) - 1) )) * pv
+bdw <- data.frame(year=numeric(per), period=numeric(per), 
+                 repayment=numeric(per), 
+                 toPrincipal=numeric(per), 
+                 percentToPrincipal=numeric(per),
+                 remainingPrincipal=numeric(per))
+bdw$repayment <- pmt
+remPrincipal <- pv
+for(i in 1:per) {
+    bdw$year[i] <- format(ceiling(i/12),nsmall=0)
+    bdw$period[i] <- format(i, nsmall=0)
+    bdw$toPrincipal[i] <- P <- pmt-(remPrincipal * rate)
+    bdw$percentToPrincipal[i] <- (P / pmt) * 100
+    remPrincipal <- round(remPrincipal - P, 2)
+    bdw$remainingPrincipal[i] <- remPrincipal
+    }
+#adjustment for last payment
+bdw$repayment[per]<-pmt+bdw$remainingPrincipal[per]
+bdw$remainingPrincipal[i] <- 0
+
+totalInterest <- sum(bdw$repayment) - sum(bdw$toPrincipal)
+totalPayment <- sum(bdw$repayment)
+totalToPrincipal <- sum(bdw$toPrincipal)
+
+with(bdw, plot(period, toPrincipal, type="n", 
+              ylab="Contribution of repayment ($ or currency entered)",
+              xlab="Period (months)",
+              main="Repayment contribution to principal and interest",
+              ylim=c(0, repayment[1])))
+
+polygon(c(1, bdw$period, dim(bdw)[1]), c(0, bdw$toPrincipal, 0),
+        col="skyblue")
+polygon(c(bdw$period[1], bdw$period, bdw$period[length(bdw$period)]), 
+        c(min(bdw$repayment), bdw$toPrincipal, min(bdw$repayment)),
+        col="red")
+legend("bottomright", pch=15, col = c("red", "skyblue"), 
+       legend = c("Pay towards interest", "Pay towards principal"))
+
+text((0.194)*as.numeric(bdw$period[length(bdw$period)]), (0.955)*bdw$repayment, 
+     paste0("Interest - $", format((totalInterest), nsmall=0)))
+
+text((0.861)*as.numeric(bdw$period[length(bdw$period)]), 
+     (0.177)*bdw$repayment, paste0("Principal - $", 
+                                  format(totalToPrincipal, nsmall=0)))
+
+text( (0.5)*as.numeric(bdw$period[length(bdw$period)]), 
+      (0.5)*bdw$repayment, paste0("Total payment - $", format(totalPayment, nsmall=0)))
+paymentBreakDown <- bdw
+```
+
+
+---
+
+## ... and the table with the breakdown   
+
+   
+```{r echo=TRUE, results='asis'}
+library(xtable)
+print(xtable(paymentBreakDown[1:3,]), type="html") #display first few lines
+```
+  
+```{r echo=TRUE, results='asis'}
+print(xtable(paymentBreakDown[238:240, ]), type="html") #display last few lines
+```
+
+
+
+
